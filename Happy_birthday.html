@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>おたんじょうびおめでとう</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;1,400;1,500&family=Shippori+Mincho:wght@400;600;800&family=Yuji+Mai&family=DM+Mono:wght@300;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #f4ebd9;
+    --bg: #0a0807;
+    --crimson: #d4332b;
+    --crimson-glow: rgba(212, 51, 43, 0.55);
+    --gold: #c9a86a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    height: 100%;
+    overflow: hidden;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Shippori Mincho', serif;
+  }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      radial-gradient(circle at 20% 30%, rgba(212, 51, 43, 0.12), transparent 50%),
+      radial-gradient(circle at 80% 70%, rgba(201, 168, 106, 0.08), transparent 50%);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  body::after {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+    opacity: 0.08;
+    pointer-events: none;
+    z-index: 2;
+    mix-blend-mode: overlay;
+  }
+
+  #symbolField {
+    position: fixed;
+    inset: 0;
+    z-index: 3;
+    pointer-events: none;
+  }
+
+  .glyph {
+    position: absolute;
+    font-family: 'Yuji Mai', 'Shippori Mincho', serif;
+    color: var(--ink);
+    opacity: 0.18;
+    user-select: none;
+    will-change: transform, opacity;
+    transition: opacity 0.4s ease;
+  }
+
+  .glyph.accent { color: var(--crimson); opacity: 0.5; }
+  .glyph.gold { color: var(--gold); opacity: 0.32; }
+  .glyph.cross { color: var(--gold); opacity: 0.55; font-family: 'Cormorant Garamond', serif; }
+
+  #verseField {
+    position: fixed;
+    inset: 0;
+    z-index: 4;
+    pointer-events: none;
+    overflow: hidden;
+  }
+
+  .verse {
+    position: absolute;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-weight: 400;
+    color: var(--ink);
+    white-space: nowrap;
+    opacity: 0;
+    user-select: none;
+    text-shadow: 0 0 30px rgba(244, 235, 217, 0.15);
+    letter-spacing: 0.02em;
+  }
+
+  .verse .ref {
+    font-style: normal;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.55em;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-left: 0.8em;
+    opacity: 0.7;
+  }
+
+  .verse .cross-mark {
+    font-style: normal;
+    color: var(--crimson);
+    margin-right: 0.5em;
+    opacity: 0.7;
+  }
+
+  .stage {
+    position: relative;
+    z-index: 10;
+    height: 100vh;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    padding: 4vh 6vw;
+  }
+
+  .top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink);
+    opacity: 0.6;
+  }
+
+  .top .ticker {
+    color: var(--crimson);
+    opacity: 0.9;
+  }
+
+  .center {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    gap: 3.5vh;
+    position: relative;
+  }
+
+  .sun {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: clamp(220px, 28vw, 380px);
+    height: clamp(220px, 28vw, 380px);
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #e85048, var(--crimson) 60%, #8a1d18);
+    box-shadow:
+      0 0 80px var(--crimson-glow),
+      0 0 160px rgba(212, 51, 43, 0.25),
+      inset -20px -30px 60px rgba(0,0,0,0.4);
+    animation: pulse 6s ease-in-out infinite;
+    z-index: -1;
+    opacity: 0.78;
+  }
+
+  .sun::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background:
+      linear-gradient(transparent 49.3%, rgba(255, 220, 180, 0.25) 49.3% 50.7%, transparent 50.7%),
+      linear-gradient(90deg, transparent 49.3%, rgba(255, 220, 180, 0.25) 49.3% 50.7%, transparent 50.7%);
+    mix-blend-mode: screen;
+    opacity: 0.5;
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: translate(-50%, -50%) scale(1); filter: brightness(1); }
+    50% { transform: translate(-50%, -50%) scale(1.04); filter: brightness(1.1); }
+  }
+
+  .narrative {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.9vh;
+    max-width: 92vw;
+    font-family: 'Shippori Mincho', serif;
+    color: var(--ink);
+    line-height: 1.55;
+    text-shadow: 0 2px 24px rgba(0,0,0,0.75);
+  }
+
+  .narrative .line {
+    display: block;
+    opacity: 0;
+    transform: translateY(18px);
+    animation: rise 1.1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    letter-spacing: 0.06em;
+  }
+
+  .narrative .line.opening {
+    font-family: 'Yuji Mai', 'Shippori Mincho', serif;
+    font-size: clamp(1.15rem, 2.5vw, 1.95rem);
+    color: var(--gold);
+    letter-spacing: 0.14em;
+    font-weight: 400;
+    margin-bottom: 1vh;
+  }
+
+  .narrative .line.body {
+    font-size: clamp(0.88rem, 1.45vw, 1.3rem);
+    font-weight: 400;
+    color: var(--ink);
+  }
+
+  .narrative .line.closing {
+    font-family: 'Shippori Mincho', serif;
+    font-weight: 800;
+    font-size: clamp(1.7rem, 4.8vw, 4rem);
+    letter-spacing: 0.05em;
+    margin-top: 2.2vh;
+    position: relative;
+    z-index: 2;
+    color: var(--ink);
+  }
+
+  .narrative .line:nth-child(1)  { animation-delay: 0.3s; }
+  .narrative .line:nth-child(2)  { animation-delay: 0.7s; }
+  .narrative .line:nth-child(3)  { animation-delay: 0.95s; }
+  .narrative .line:nth-child(4)  { animation-delay: 1.2s; }
+  .narrative .line:nth-child(5)  { animation-delay: 1.45s; }
+  .narrative .line:nth-child(6)  { animation-delay: 1.7s; }
+  .narrative .line:nth-child(7)  { animation-delay: 1.95s; }
+  .narrative .line:nth-child(8)  { animation-delay: 2.2s; }
+  .narrative .line:nth-child(9)  { animation-delay: 2.45s; }
+  .narrative .line:nth-child(10) { animation-delay: 2.7s; }
+  .narrative .line:nth-child(11) { animation-delay: 3.1s; }
+
+  /* Personal coda — handwritten-feel addendum */
+  .narrative .line.coda-divider {
+    color: var(--crimson);
+    font-size: clamp(0.7rem, 1vw, 1rem);
+    letter-spacing: 0.7em;
+    margin-top: 2.6vh;
+    margin-bottom: 0.6vh;
+    opacity: 0.7;
+  }
+
+  .narrative .line.coda {
+    font-family: 'Shippori Mincho', serif;
+    font-size: clamp(0.85rem, 1.35vw, 1.2rem);
+    color: var(--gold);
+    letter-spacing: 0.08em;
+    font-weight: 400;
+    line-height: 1.75;
+    max-width: 70ch;
+    opacity: 0.95;
+  }
+
+  .narrative .line:nth-child(12) { animation-delay: 3.6s; }
+  .narrative .line:nth-child(13) { animation-delay: 3.95s; }
+  .narrative .line:nth-child(14) { animation-delay: 4.3s; }
+  .narrative .line:nth-child(15) { animation-delay: 4.65s; }
+
+  @keyframes rise {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink);
+    opacity: 0.55;
+  }
+
+  .corner-mark {
+    font-family: 'Yuji Mai', serif;
+    font-size: 1.4rem;
+    color: var(--crimson);
+    opacity: 0.75;
+  }
+
+  .bracket {
+    position: fixed;
+    width: 30px;
+    height: 30px;
+    border: 1px solid var(--ink);
+    opacity: 0.3;
+    z-index: 5;
+  }
+  .bracket.tl { top: 20px; left: 20px; border-right: none; border-bottom: none; }
+  .bracket.tr { top: 20px; right: 20px; border-left: none; border-bottom: none; }
+  .bracket.bl { bottom: 20px; left: 20px; border-right: none; border-top: none; }
+  .bracket.br { bottom: 20px; right: 20px; border-left: none; border-top: none; }
+
+  @media (max-width: 600px) {
+    .stage { padding: 3vh 5vw; }
+    .top, .bottom { font-size: 9px; }
+    .verse { font-size: 0.85em !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="bracket tl"></div>
+<div class="bracket tr"></div>
+<div class="bracket bl"></div>
+<div class="bracket br"></div>
+
+<div id="symbolField"></div>
+<div id="verseField"></div>
+
+<div class="stage">
+  <div class="top">
+    <div>祝 ・ Celebration No. 01</div>
+    <div class="ticker" id="ticker">◉ LIVE</div>
+  </div>
+
+  <div class="center">
+    <div class="sun"></div>
+    <div class="narrative">
+      <span class="line opening">むかしむかし、とおいとおい、うみのむこうに...</span>
+      <span class="line body">ひとつの ほしが ありました。</span>
+      <span class="line body">そのほしは まいとし いちどだけ ひかりをはなち、</span>
+      <span class="line body">たいせつなひとの たんじょうを いわうのです。</span>
+      <span class="line body">きょう、そのひかりが あなたのもとへ とどきました。</span>
+      <span class="line body">かぜは うたい、つきは ほほえみ、</span>
+      <span class="line body">はなびらは そらに まいあがります。</span>
+      <span class="line body">すべての ものたちが、あなたを ことほいでいます。</span>
+      <span class="line body">どうか このいちねんが ひかりに みちますように。</span>
+      <span class="line body">そして あなたのみちに、いつも やすらぎが ありますように。</span>
+      <span class="line closing">おたんじょうび、こころから おめでとう。</span>
+      <span class="line coda-divider">✦ ✦ ✦</span>
+      <span class="line coda">あなたという ひとすじの ひかりが、わたしの まいにちを てらしてくれます。</span>
+      <span class="line coda">そのちいさな きらめきが、ときをこえて あつまり、わたしじしんを ひとつの まるい たいように そだててくれました。</span>
+      <span class="line coda">あなたは ただ そばにいるだけで、わたしを かがやかせる ひとです。</span>
+    </div>
+  </div>
+
+  <div class="bottom">
+    <div class="corner-mark">寿</div>
+    <div>すてきな いちねんに なりますように</div>
+    <div class="corner-mark">福</div>
+  </div>
+</div>
+
+<script>
+  /* ===== Symbol field ===== */
+  const symbolPools = [
+    'あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをん'.split(''),
+    'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン'.split(''),
+    '寿福賀祝喜慶誕生命光夢愛心希望春花月星運道恵神救主'.split(''),
+    '✦◈✧⟁✺☄❖⌬✵◊⟡✹❀⚡◉◎●○◐◑◒◓⬢⬡△▲▽▼◆◇'.split(''),
+    '一二三四五六七八九十百千万億兆'.split('')
+  ];
+  const crossPool = '✝†☩✟⛨☨'.split('');
+  const allSymbols = symbolPools.flat();
+
+  const field = document.getElementById('symbolField');
+  const COUNT = window.innerWidth < 600 ? 28 : 60;
+  const glyphs = [];
+
+  function pickSymbol() {
+    if (Math.random() < 0.12) return { char: crossPool[Math.floor(Math.random() * crossPool.length)], isCross: true };
+    return { char: allSymbols[Math.floor(Math.random() * allSymbols.length)], isCross: false };
+  }
+
+  for (let i = 0; i < COUNT; i++) {
+    const g = document.createElement('span');
+    g.className = 'glyph';
+    const pick = pickSymbol();
+    if (pick.isCross) g.classList.add('cross');
+    else if (Math.random() < 0.12) g.classList.add('accent');
+    else if (Math.random() < 0.18) g.classList.add('gold');
+
+    const size = 14 + Math.random() * 38;
+    g.style.fontSize = size + 'px';
+    g.style.left = Math.random() * 100 + '%';
+    g.style.top = Math.random() * 100 + '%';
+    g.style.transform = `rotate(${(Math.random() - 0.5) * 20}deg)`;
+    g.textContent = pick.char;
+
+    field.appendChild(g);
+    glyphs.push(g);
+  }
+
+  function mutate() {
+    const toChange = Math.ceil(glyphs.length * 0.15);
+    for (let i = 0; i < toChange; i++) {
+      const g = glyphs[Math.floor(Math.random() * glyphs.length)];
+      g.style.opacity = '0';
+      setTimeout(() => {
+        const pick = pickSymbol();
+        g.classList.remove('accent', 'gold', 'cross');
+        if (pick.isCross) g.classList.add('cross');
+        else if (Math.random() < 0.12) g.classList.add('accent');
+        else if (Math.random() < 0.2) g.classList.add('gold');
+        g.textContent = pick.char;
+
+        if (Math.random() < 0.3) {
+          g.style.left = Math.random() * 100 + '%';
+          g.style.top = Math.random() * 100 + '%';
+        }
+        g.style.opacity = '';
+      }, 200);
+    }
+  }
+  setInterval(mutate, 350);
+
+  /* ===== Floating Bible verses ===== */
+  const verses = [
+    { text: 'Do not be afraid, for I am with you', ref: 'Isaiah 41:10' },
+    { text: 'Be still, and know that I am God', ref: 'Psalm 46:10' },
+    { text: 'The Lord is my shepherd, I shall not want', ref: 'Psalm 23:1' },
+    { text: 'I can do all things through Him who strengthens me', ref: 'Philippians 4:13' },
+    { text: 'Perfect love casts out fear', ref: '1 John 4:18' },
+    { text: 'God is love', ref: '1 John 4:8' },
+    { text: 'Rejoice in the Lord always', ref: 'Philippians 4:4' },
+    { text: 'Be strong and courageous', ref: 'Joshua 1:9' },
+    { text: 'The joy of the Lord is your strength', ref: 'Nehemiah 8:10' },
+    { text: 'He restores my soul', ref: 'Psalm 23:3' },
+    { text: 'Cast all your anxiety on Him, for He cares for you', ref: '1 Peter 5:7' },
+    { text: 'All things work together for good to those who love God', ref: 'Romans 8:28' },
+    { text: 'Trust in the Lord with all your heart', ref: 'Proverbs 3:5' },
+    { text: 'Walk by faith, not by sight', ref: '2 Corinthians 5:7' },
+    { text: 'His mercy endures forever', ref: 'Psalm 136:1' },
+    { text: 'Greater is He that is in you than he that is in the world', ref: '1 John 4:4' },
+    { text: 'Let not your heart be troubled', ref: 'John 14:1' },
+    { text: 'My grace is sufficient for you', ref: '2 Corinthians 12:9' },
+    { text: 'Joy comes in the morning', ref: 'Psalm 30:5' },
+    { text: 'I have called you by name; you are mine', ref: 'Isaiah 43:1' }
+  ];
+
+  const verseField = document.getElementById('verseField');
+  const VERSE_SLOTS = window.innerWidth < 600 ? 2 : 4;
+  const usedRecently = [];
+
+  function pickVerse() {
+    let v;
+    let tries = 0;
+    do {
+      v = verses[Math.floor(Math.random() * verses.length)];
+      tries++;
+    } while (usedRecently.includes(v.ref) && tries < 10);
+    usedRecently.push(v.ref);
+    if (usedRecently.length > 6) usedRecently.shift();
+    return v;
+  }
+
+  function spawnVerse(slotEl) {
+    const v = pickVerse();
+    slotEl.innerHTML = `<span class="cross-mark">†</span>${v.text}<span class="ref">— ${v.ref}</span>`;
+
+    const isMobile = window.innerWidth < 600;
+    let topPct;
+    if (isMobile) {
+      topPct = Math.random() < 0.5 ? 8 + Math.random() * 18 : 70 + Math.random() * 18;
+    } else {
+      const band = Math.random();
+      if (band < 0.45) topPct = 6 + Math.random() * 25;
+      else if (band < 0.9) topPct = 70 + Math.random() * 22;
+      else topPct = Math.random() < 0.5 ? 33 : 64;
+    }
+    slotEl.style.top = topPct + '%';
+
+    const baseFs = isMobile ? 13 : 16;
+    const fs = baseFs + Math.random() * (isMobile ? 4 : 10);
+    slotEl.style.fontSize = fs + 'px';
+
+    const drift = (Math.random() - 0.5) * 60;
+    const startLeft = -10 - Math.random() * 20;
+    const endLeft = 110 + Math.random() * 20;
+
+    const rightToLeft = Math.random() < 0.5;
+    const fromX = rightToLeft ? endLeft : startLeft;
+    const toX = rightToLeft ? startLeft : endLeft;
+
+    slotEl.style.left = fromX + '%';
+    slotEl.style.opacity = '0';
+
+    const duration = 14000 + Math.random() * 10000;
+    const anim = slotEl.animate([
+      { opacity: 0, left: fromX + '%', transform: `translateY(0px)` },
+      { opacity: 0.55, offset: 0.15 },
+      { opacity: 0.55, offset: 0.85 },
+      { opacity: 0, left: toX + '%', transform: `translateY(${drift}px)` }
+    ], {
+      duration: duration,
+      easing: 'cubic-bezier(0.4, 0, 0.6, 1)',
+      fill: 'forwards'
+    });
+
+    anim.onfinish = () => {
+      setTimeout(() => spawnVerse(slotEl), 500 + Math.random() * 2500);
+    };
+  }
+
+  for (let i = 0; i < VERSE_SLOTS; i++) {
+    const slot = document.createElement('div');
+    slot.className = 'verse';
+    verseField.appendChild(slot);
+    setTimeout(() => spawnVerse(slot), i * 3500 + Math.random() * 1500);
+  }
+
+  /* ===== Live ticker ===== */
+  const ticker = document.getElementById('ticker');
+  const tickerStates = ['◉ LIVE', '◎ LIVE', '○ LIVE', '◎ LIVE'];
+  let ti = 0;
+  setInterval(() => {
+    ticker.textContent = tickerStates[ti++ % tickerStates.length];
+  }, 500);
+</script>
+
+</body>
+</html>
